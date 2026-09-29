@@ -20,8 +20,8 @@ suppressMessages({
   library(dplyr)
 })
 
-adae <- read.csv("../03_reference_adam/adae_prod.csv", stringsAsFactors = FALSE)
-adsl <- read.csv("../03_reference_adam/adsl_small.csv", stringsAsFactors = FALSE)
+adae <- read.csv("../ADAE/ADAE_prod.csv", stringsAsFactors = FALSE)
+adsl <- read.csv("../ADAE/ADSL_small.csv", stringsAsFactors = FALSE)
 
 arms <- adsl %>% filter(SAFFL == "Y") %>% count(TRT01A, name = "N") %>% arrange(TRT01A)
 
