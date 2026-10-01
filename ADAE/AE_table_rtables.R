@@ -20,22 +20,33 @@ suppressMessages({
   library(dplyr)
 })
 
-adae <- read.csv("../ADAE/ADAE_prod.csv", stringsAsFactors = FALSE)
-adsl <- read.csv("../ADAE/ADSL_small.csv", stringsAsFactors = FALSE)
+adae <- read.csv("ADAE/ADAE_prod.csv", stringsAsFactors = FALSE)
+adsl <- read.csv("ADAE/ADSL_small.csv", stringsAsFactors = FALSE)
 
-arms <- adsl %>% filter(SAFFL == "Y") %>% count(TRT01A, name = "N") %>% arrange(TRT01A)
+arms <- adsl %>%
+  filter(SAFFL == "Y") %>%
+  count(TRT01A, name = "N") %>%
+  arrange(TRT01A)
 
 teae <- adae %>%
   filter(TRTEMFL == "Y", SAFFL == "Y") %>%
   distinct(USUBJID, AEDECOD, TRT01A)
 
 # Top 8 most frequent preferred terms overall, for a compact demo table
-top_terms <- teae %>% count(AEDECOD, name = "n_subj") %>% arrange(desc(n_subj)) %>% head(8) %>% pull(AEDECOD)
+top_terms <- teae %>%
+  count(AEDECOD, name = "n_subj") %>%
+  arrange(desc(n_subj)) %>%
+  head(8) %>%
+  pull(AEDECOD)
 
 counts <- teae %>%
   filter(AEDECOD %in% top_terms) %>%
   count(AEDECOD, TRT01A, name = "n") %>%
-  tidyr::complete(AEDECOD = top_terms, TRT01A = arms$TRT01A, fill = list(n = 0)) %>%
+  tidyr::complete(
+    AEDECOD = top_terms,
+    TRT01A = arms$TRT01A,
+    fill = list(n = 0)
+  ) %>%
   left_join(arms, by = "TRT01A") %>%
   mutate(pct = 100 * n / N)
 
@@ -44,16 +55,21 @@ fmt_cell <- function(n, pct) sprintf("%d (%.1f%%)", n, pct)
 # Build the rtables object row by row: one rrow() per Preferred Term
 mk_row <- function(term) {
   vals <- counts %>% filter(AEDECOD == term) %>% arrange(TRT01A)
-  rrow(term,
-       fmt_cell(vals$n[1], vals$pct[1]),
-       fmt_cell(vals$n[2], vals$pct[2]),
-       fmt_cell(vals$n[3], vals$pct[3]))
+  rrow(
+    term,
+    fmt_cell(vals$n[1], vals$pct[1]),
+    fmt_cell(vals$n[2], vals$pct[2]),
+    fmt_cell(vals$n[3], vals$pct[3])
+  )
 }
 
 hdr <- rheader(
-  rrow("", paste0(arms$TRT01A[1], " (N=", arms$N[1], ")"),
-           paste0(arms$TRT01A[2], " (N=", arms$N[2], ")"),
-           paste0(arms$TRT01A[3], " (N=", arms$N[3], ")"))
+  rrow(
+    "",
+    paste0(arms$TRT01A[1], " (N=", arms$N[1], ")"),
+    paste0(arms$TRT01A[2], " (N=", arms$N[2], ")"),
+    paste0(arms$TRT01A[3], " (N=", arms$N[3], ")")
+  )
 )
 
 result <- rtable(
